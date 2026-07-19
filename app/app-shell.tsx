@@ -90,13 +90,23 @@ function authHeaders() {
     : { "x-demo-id": demoId() };
 }
 
-async function waitForTelegramInitData(timeoutMs = 1500) {
+async function waitForTelegramInitData(timeoutMs = 2200) {
   const startedAt = Date.now();
+  let previous = "";
+  let stableHits = 0;
+
   while (Date.now() - startedAt < timeoutMs) {
-    const initData = window.Telegram?.WebApp?.initData?.trim();
-    if (initData) return initData;
-    await new Promise((resolve) => window.setTimeout(resolve, 50));
+    const initData = window.Telegram?.WebApp?.initData?.trim() ?? "";
+    if (initData && initData === previous) {
+      stableHits += 1;
+      if (stableHits >= 2) return initData;
+    } else {
+      stableHits = initData ? 1 : 0;
+      previous = initData;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 80));
   }
+
   return window.Telegram?.WebApp?.initData?.trim() ?? "";
 }
 
@@ -144,9 +154,24 @@ export default function AppShell() {
 
   const load = useCallback(async () => {
     setError("");
-    try {
+    const isTelegram = Boolean(window.Telegram?.WebApp);
+
+    const loadOnce = async () => {
       await waitForTelegramInitData();
-      const dashboard = await api<DashboardData>("/api/bootstrap");
+      return api<DashboardData>("/api/bootstrap");
+    };
+
+    try {
+      let dashboard: DashboardData;
+      try {
+        dashboard = await loadOnce();
+      } catch (firstError) {
+        if (!isTelegram) throw firstError;
+        await new Promise((resolve) => window.setTimeout(resolve, 350));
+        await waitForTelegramInitData(2500);
+        dashboard = await loadOnce();
+      }
+
       setData(dashboard);
       const deepLinkLesson = new URLSearchParams(window.location.search).get("lesson");
       if (deepLinkLesson) setLessonId(deepLinkLesson);
