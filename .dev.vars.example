@@ -1,0 +1,6 @@
+# Скопируйте в .dev.vars только для локальной проверки реального Telegram initData.
+BOT_TOKEN=123456:replace-with-real-token
+TELEGRAM_WEBHOOK_SECRET=replace-with-random-secret
+APP_URL=https://replace-with-your-public-url.example
+ALLOW_DEMO_MODE=true
+TELEGRAM_AUTH_MAX_AGE_SECONDS=86400

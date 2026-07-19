@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "arabic-na-sluh",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-05-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "dist/client",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "arabic-na-sluh",
+      "database_id": "2aa7a1dd-8711-4d7d-b44b-d2d2705f2815",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+  "vars": {
+    "APP_URL": "https://arabic-na-sluh.atubu2000.workers.dev",
+    "ALLOW_DEMO_MODE": "false",
+    "TELEGRAM_AUTH_MAX_AGE_SECONDS": "86400"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
