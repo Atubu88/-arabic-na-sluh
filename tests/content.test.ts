@@ -3,19 +3,24 @@ import { existsSync } from "node:fs";
 import test from "node:test";
 import { lessons } from "../content/lessons";
 
-test("introduction block contains four complete audio lessons", () => {
-  assert.equal(lessons.length, 4);
-  assert.equal(new Set(lessons.map((lesson) => lesson.id)).size, 4);
+test("level one contains two complete blocks with eight audio lessons", () => {
+  assert.equal(lessons.length, 8);
+  assert.equal(new Set(lessons.map((lesson) => lesson.id)).size, 8);
   for (const [index, lesson] of lessons.entries()) {
     assert.equal(lesson.level, 1);
-    assert.equal(lesson.block, 1);
-    assert.equal(lesson.blockTitle, "Знакомство");
     assert.equal(lesson.number, index + 1);
     assert.equal(lesson.audioStatus, "ready");
     assert.ok(existsSync(`public${lesson.audioUrl}`));
     assert.ok(lesson.goal.length > 0);
     assert.ok(lesson.shortAnalysis.length > 0);
   }
+
+  const introduction = lessons.filter((lesson) => lesson.block === 1);
+  const languages = lessons.filter((lesson) => lesson.block === 2);
+  assert.equal(introduction.length, 4);
+  assert.ok(introduction.every((lesson) => lesson.blockTitle === "Знакомство"));
+  assert.equal(languages.length, 4);
+  assert.ok(languages.every((lesson) => lesson.blockTitle === "Языки и общение"));
 });
 
 test("lesson timings are continuous, ordered and inside duration", () => {

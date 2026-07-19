@@ -349,7 +349,26 @@ function HomeView({ data, openLesson }: { data: DashboardData; openLesson(id: st
 function PathView({ data, openLesson }: { data: DashboardData; openLesson(id: string): void }) {
   const learned = data.cards.filter((card) => card.state !== 0).length;
   const percent = data.lessons.length ? Math.round((learned / data.lessons.length) * 100) : 0;
-  const firstLesson = data.lessons[0];
+  const blocks = data.lessons.reduce<Array<{
+    level: number;
+    number: number;
+    title: string;
+    lessons: Lesson[];
+  }>>((groups, lesson) => {
+    let group = groups.find((item) => item.level === lesson.level && item.number === lesson.block);
+    if (!group) {
+      group = { level: lesson.level, number: lesson.block, title: lesson.blockTitle, lessons: [] };
+      groups.push(group);
+    }
+    group.lessons.push(lesson);
+    return groups;
+  }, []);
+
+  const blockDescriptions: Record<number, string> = {
+    1: "Четыре коротких диалога: приветствие, происхождение, город и новые знакомые.",
+    2: "Четыре коротких диалога: языки, понимание речи и общение с новыми людьми.",
+  };
+
   return (
     <>
       <PageHeader
@@ -366,34 +385,38 @@ function PathView({ data, openLesson }: { data: DashboardData; openLesson(id: st
         <div className="progress-track"><span style={{ width: `${percent}%` }} /></div>
         <p>{learned} из {data.lessons.length} уроков начато</p>
       </section>
-      <section className="block-intro">
-        <div className="block-number">{firstLesson?.block ?? 1}</div>
-        <div>
-          <p className="eyebrow">Уровень {firstLesson?.level ?? 1} · Блок {firstLesson?.block ?? 1}</p>
-          <h2>{firstLesson?.blockTitle ?? "Знакомство"}</h2>
-          <p>Четыре коротких диалога: приветствие, происхождение, город и новые знакомые.</p>
-        </div>
-      </section>
-      <section className="lesson-list">
-        {data.lessons.map((lesson) => {
-          const card = data.cards.find((item) => item.lessonId === lesson.id);
-          const learnedLesson = Boolean(card && card.state !== 0);
-          const due = learnedLesson && new Date(card!.dueAt) <= new Date();
-          return (
-            <button key={lesson.id} className="lesson-row" onClick={() => openLesson(lesson.id)}>
-              <span className={`lesson-index ${learnedLesson ? "done" : ""}`}>
-                {learnedLesson ? <Check size={18} /> : lesson.number}
-              </span>
-              <span className="lesson-copy">
-                <span className="lesson-meta">{due ? "ПОРА ПОВТОРИТЬ" : `${Math.round(lesson.durationMs / 1000)} СЕК · ДИАЛОГ`}</span>
-                <strong>{lesson.title}</strong>
-                <span>{learnedLesson ? `Следующий раз: ${formatDate(card!.dueAt)}` : lesson.description}</span>
-              </span>
-              <ChevronRight size={19} />
-            </button>
-          );
-        })}
-      </section>
+      {blocks.map((block) => (
+        <section className="path-block" key={`${block.level}-${block.number}`}>
+          <div className="block-intro">
+            <div className="block-number">{block.number}</div>
+            <div>
+              <p className="eyebrow">Уровень {block.level} · Блок {block.number}</p>
+              <h2>{block.title}</h2>
+              <p>{blockDescriptions[block.number] ?? `${block.lessons.length} коротких аудиодиалога.`}</p>
+            </div>
+          </div>
+          <div className="lesson-list">
+            {block.lessons.map((lesson) => {
+              const card = data.cards.find((item) => item.lessonId === lesson.id);
+              const learnedLesson = Boolean(card && card.state !== 0);
+              const due = learnedLesson && new Date(card!.dueAt) <= new Date();
+              return (
+                <button key={lesson.id} className="lesson-row" onClick={() => openLesson(lesson.id)}>
+                  <span className={`lesson-index ${learnedLesson ? "done" : ""}`}>
+                    {learnedLesson ? <Check size={18} /> : lesson.number}
+                  </span>
+                  <span className="lesson-copy">
+                    <span className="lesson-meta">{due ? "ПОРА ПОВТОРИТЬ" : `${Math.round(lesson.durationMs / 1000)} СЕК · ДИАЛОГ`}</span>
+                    <strong>{lesson.title}</strong>
+                    <span>{learnedLesson ? `Следующий раз: ${formatDate(card!.dueAt)}` : lesson.description}</span>
+                  </span>
+                  <ChevronRight size={19} />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </>
   );
 }

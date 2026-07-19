@@ -21,7 +21,7 @@ async function signInitData(values: Record<string, string>, token: string) {
 }
 
 test("validates Telegram initData and reads identity only from signed payload", async () => {
-  const now = new Date("2026-07-18T12:00:00.000Z");
+  const now = new Date();
   const token = "123456:test-token";
   const initData = await signInitData({
     auth_date: String(Math.floor(now.getTime() / 1000)),
@@ -34,7 +34,7 @@ test("validates Telegram initData and reads identity only from signed payload", 
 });
 
 test("rejects tampered and expired Telegram initData", async () => {
-  const now = new Date("2026-07-18T12:00:00.000Z");
+  const now = new Date();
   const token = "123456:test-token";
   const initData = await signInitData({
     auth_date: String(Math.floor(now.getTime() / 1000) - 90_000),
