@@ -8,6 +8,11 @@ import {
 import type { RatingKey, RatingOption } from "./types";
 
 type ReviewRating = Rating.Again | Rating.Hard | Rating.Good | Rating.Easy;
+export type MasteryLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+type ControlledInterval =
+  | { unit: "minutes"; value: number; label: string }
+  | { unit: "days"; value: number; label: string };
 
 export const ratingToFsrs: Record<RatingKey, ReviewRating> = {
   again: Rating.Again,
@@ -24,11 +29,79 @@ export const fsrsToRating: Record<number, RatingKey> = {
 };
 
 const ratingLabels: Record<RatingKey, string> = {
-  again: "Не помню",
+  again: "Не понял",
   hard: "Трудно",
   good: "Нормально",
   easy: "Легко",
 };
+
+const controlledIntervals: Record<MasteryLevel, Record<RatingKey, ControlledInterval>> = {
+  1: {
+    again: { unit: "minutes", value: 10, label: "10 мин" },
+    hard: { unit: "days", value: 1, label: "1 день" },
+    good: { unit: "days", value: 3, label: "3 дня" },
+    easy: { unit: "days", value: 7, label: "7 дней" },
+  },
+  2: {
+    again: { unit: "minutes", value: 10, label: "10 мин" },
+    hard: { unit: "days", value: 2, label: "2 дня" },
+    good: { unit: "days", value: 7, label: "7 дней" },
+    easy: { unit: "days", value: 14, label: "14 дней" },
+  },
+  3: {
+    again: { unit: "days", value: 1, label: "1 день" },
+    hard: { unit: "days", value: 4, label: "4 дня" },
+    good: { unit: "days", value: 14, label: "14 дней" },
+    easy: { unit: "days", value: 30, label: "30 дней" },
+  },
+  4: {
+    again: { unit: "days", value: 1, label: "1 день" },
+    hard: { unit: "days", value: 7, label: "7 дней" },
+    good: { unit: "days", value: 30, label: "30 дней" },
+    easy: { unit: "days", value: 60, label: "60 дней" },
+  },
+  5: {
+    again: { unit: "days", value: 3, label: "3 дня" },
+    hard: { unit: "days", value: 14, label: "14 дней" },
+    good: { unit: "days", value: 60, label: "60 дней" },
+    easy: { unit: "days", value: 120, label: "120 дней" },
+  },
+  6: {
+    again: { unit: "days", value: 3, label: "3 дня" },
+    hard: { unit: "days", value: 28, label: "28 дней" },
+    good: { unit: "days", value: 120, label: "120 дней" },
+    easy: { unit: "days", value: 220, label: "220 дней" },
+  },
+};
+
+const levelTransitions: Record<MasteryLevel, Record<RatingKey, MasteryLevel>> = {
+  1: { again: 1, hard: 1, good: 2, easy: 3 },
+  2: { again: 1, hard: 2, good: 3, easy: 4 },
+  3: { again: 2, hard: 3, good: 4, easy: 5 },
+  4: { again: 3, hard: 4, good: 5, easy: 6 },
+  5: { again: 4, hard: 5, good: 6, easy: 6 },
+  6: { again: 5, hard: 6, good: 6, easy: 6 },
+};
+
+export function normalizeMasteryLevel(value: number): MasteryLevel {
+  if (Number.isInteger(value) && value >= 1 && value <= 6) return value as MasteryLevel;
+  return 1;
+}
+
+export function nextMasteryLevel(level: MasteryLevel, rating: RatingKey): MasteryLevel {
+  return levelTransitions[level][rating];
+}
+
+export function controlledInterval(level: MasteryLevel, rating: RatingKey) {
+  return controlledIntervals[level][rating];
+}
+
+function controlledDue(from: Date, interval: ControlledInterval) {
+  const milliseconds = interval.unit === "minutes"
+    ? interval.value * 60_000
+    : interval.value * 86_400_000;
+  return new Date(from.getTime() + milliseconds);
+}
 
 export const scheduler = fsrs({
   request_retention: 0.9,
@@ -54,6 +127,8 @@ export type StoredCard = {
 
 export type StoredSchedulingOption = {
   key: RatingKey;
+  masteryLevel: MasteryLevel;
+  intervalLabel: string;
   card: StoredCard;
   log: {
     rating: number;
@@ -99,14 +174,24 @@ export function restoreCard(card: StoredCard): Card {
   };
 }
 
-function storeResult(key: RatingKey, result: RecordLogItem): StoredSchedulingOption {
+function storeResult(
+  key: RatingKey,
+  result: RecordLogItem,
+  dueAt: Date,
+  masteryLevel: MasteryLevel,
+  intervalLabel: string,
+): StoredSchedulingOption {
+  result.card.due = dueAt;
+  result.card.scheduled_days = Math.max(0, Math.round((dueAt.getTime() - result.log.review.getTime()) / 86_400_000));
   return {
     key,
+    masteryLevel,
+    intervalLabel,
     card: storeCard(result.card),
     log: {
       rating: result.log.rating,
       state: result.log.state,
-      dueAt: result.log.due.toISOString(),
+      dueAt: dueAt.toISOString(),
       reviewedAt: result.log.review.toISOString(),
       elapsedDays: result.log.elapsed_days,
       scheduledDays: result.log.scheduled_days,
@@ -114,10 +199,19 @@ function storeResult(key: RatingKey, result: RecordLogItem): StoredSchedulingOpt
   };
 }
 
-export function calculateOptions(card: StoredCard, now = new Date()) {
+export function calculateOptions(card: StoredCard, masteryLevel: MasteryLevel, now = new Date()) {
   const preview = scheduler.repeat(restoreCard(card), now);
   const keys: RatingKey[] = ["again", "hard", "good", "easy"];
-  return keys.map((key) => storeResult(key, preview[ratingToFsrs[key]]));
+  return keys.map((key) => {
+    const interval = controlledInterval(masteryLevel, key);
+    return storeResult(
+      key,
+      preview[ratingToFsrs[key]],
+      controlledDue(now, interval),
+      nextMasteryLevel(masteryLevel, key),
+      interval.label,
+    );
+  });
 }
 
 export function formatInterval(from: Date, due: Date) {
@@ -133,14 +227,11 @@ export function formatInterval(from: Date, due: Date) {
   return `${years} г`;
 }
 
-export function publicOptions(
-  options: StoredSchedulingOption[],
-  calculatedAt: Date,
-): RatingOption[] {
+export function publicOptions(options: StoredSchedulingOption[]): RatingOption[] {
   return options.map((option) => ({
     key: option.key,
     label: ratingLabels[option.key],
-    intervalLabel: formatInterval(calculatedAt, new Date(option.card.dueAt)),
+    intervalLabel: option.intervalLabel,
     dueAt: option.card.dueAt,
   }));
 }

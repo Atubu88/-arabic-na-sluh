@@ -40,6 +40,7 @@ export type RatingOption = {
 export type CardSummary = {
   lessonId: string;
   state: number;
+  masteryLevel: number;
   dueAt: string;
   lastRating: RatingKey | null;
   reps: number;

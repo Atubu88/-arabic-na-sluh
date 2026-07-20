@@ -34,6 +34,7 @@ const schemaStatements = [
     reps INTEGER NOT NULL DEFAULT 0,
     lapses INTEGER NOT NULL DEFAULT 0,
     state INTEGER NOT NULL DEFAULT 0,
+    mastery_level INTEGER NOT NULL DEFAULT 1,
     last_review TEXT,
     last_rating TEXT,
     revision INTEGER NOT NULL DEFAULT 0,
@@ -92,7 +93,26 @@ export function getD1() {
 }
 
 export async function ensureSchema(db = getD1()) {
-  schemaReady ??= db.batch(schemaStatements.map((statement) => db.prepare(statement))).then(() => undefined);
+  schemaReady ??= (async () => {
+    await db.batch(schemaStatements.map((statement) => db.prepare(statement)));
+    const columns = await db.prepare("PRAGMA table_info(lesson_cards)").all<{ name: string }>();
+    if (!columns.results.some((column) => column.name === "mastery_level")) {
+      try {
+        await db.prepare("ALTER TABLE lesson_cards ADD COLUMN mastery_level INTEGER NOT NULL DEFAULT 1").run();
+        await db.prepare(
+          `UPDATE lesson_cards SET mastery_level = CASE
+            WHEN reps >= 10 THEN 6
+            WHEN reps >= 7 THEN 5
+            WHEN reps >= 5 THEN 4
+            WHEN reps >= 3 THEN 3
+            WHEN reps >= 1 THEN 2
+            ELSE 1 END`,
+        ).run();
+      } catch (error) {
+        if (!String(error).toLowerCase().includes("duplicate column")) throw error;
+      }
+    }
+  })();
   await schemaReady;
 }
 
@@ -133,9 +153,9 @@ export async function upsertUser(db: D1Database, identity: RequestIdentity) {
     await db.prepare(
       `INSERT OR IGNORE INTO lesson_cards (
         user_id, lesson_id, due_at, stability, difficulty, elapsed_days,
-        scheduled_days, learning_steps, reps, lapses, state, last_review,
+        scheduled_days, learning_steps, reps, lapses, state, mastery_level, last_review,
         last_rating, revision, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 0, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NULL, 0, ?)`,
     ).bind(
       identity.userId,
       lesson.id,
@@ -166,6 +186,7 @@ export type CardRow = {
   reps: number;
   lapses: number;
   state: number;
+  mastery_level: number;
   last_review: string | null;
   last_rating: string | null;
   revision: number;

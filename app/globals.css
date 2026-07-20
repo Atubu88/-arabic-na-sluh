@@ -200,10 +200,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(40, 91, 73, 
 .review-heading > span { width: 33px; height: 33px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; color: white; background: var(--green); }
 .review-heading h2 { margin: 0; font-family: Georgia, serif; font-size: 21px; line-height: 1.25; font-weight: 600; }
 .rating-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 17px; }
-.rating-button { min-height: 70px; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 17px; background: #faf7f0; cursor: pointer; }
+.card-level-label { width: fit-content; margin: 14px 0 -5px; padding: 6px 9px; border-radius: 99px; color: var(--green-dark); background: var(--green-soft); font-size: 10px; font-weight: 800; }
+.rating-button { min-height: 70px; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 10px; border: 1px solid transparent; border-radius: 17px; color: white; cursor: pointer; box-shadow: 0 7px 18px rgba(31,37,34,.1); transition: transform .15s ease, opacity .15s ease; }
+.rating-button:active { transform: scale(.98); }
+.rating-button:disabled { opacity: .62; cursor: wait; }
 .rating-button span { display: flex; justify-content: center; font-size: 11px; font-weight: 750; }
-.rating-button strong { color: var(--green); font-family: Georgia, serif; font-size: 17px; }
-.rating-button.again { background: #f7ece9; } .rating-button.hard { background: #f6f0e3; } .rating-button.good { background: #e9f0ea; } .rating-button.easy { background: #dfece4; }
+.rating-button strong { color: inherit; font-family: Georgia, serif; font-size: 17px; }
+.rating-button.again { background: #c94f4f; }
+.rating-button.hard { background: #202522; }
+.rating-button.good { background: #337a5f; }
+.rating-button.easy { color: #103d4b; background: #83cfe9; }
 .calculating { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--muted); font-size: 11px; }
 .inline-error { margin-top: 14px; padding: 11px; border-radius: 12px; color: #8d4945; background: #f6e8e5; font-size: 11px; }
 .inline-error button { margin-left: 8px; border: 0; color: inherit; background: transparent; text-decoration: underline; cursor: pointer; }
