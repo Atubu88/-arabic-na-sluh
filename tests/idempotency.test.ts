@@ -13,3 +13,9 @@ test("migration enforces one reminder per exact due card", async () => {
   const sql = await readFile(new URL("../drizzle/0000_smart_tarantula.sql", import.meta.url), "utf8");
   assert.match(sql, /notifications_due_unique/);
 });
+
+test("migration adds the controlled mastery level", async () => {
+  const sql = await readFile(new URL("../drizzle/0001_controlled_mastery_levels.sql", import.meta.url), "utf8");
+  assert.match(sql, /mastery_level/);
+  assert.match(sql, /WHEN `reps` >= 10 THEN 6/);
+});

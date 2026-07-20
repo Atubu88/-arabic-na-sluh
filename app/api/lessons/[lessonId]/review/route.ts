@@ -67,7 +67,7 @@ export async function POST(
 
     const options = JSON.parse(attempt.options_json) as StoredSchedulingOption[];
     const selected = options.find((option) => option.key === body.rating);
-    if (!selected) throw new HttpError(400, "Вариант FSRS не найден");
+    if (!selected) throw new HttpError(400, "Вариант оценки не найден");
 
     const reviewedAt = new Date().toISOString();
     const historyId = crypto.randomUUID();
@@ -79,6 +79,7 @@ export async function POST(
       state: selected.card.state,
       reps: selected.card.reps,
       lapses: selected.card.lapses,
+      masteryLevel: selected.masteryLevel,
       revision: card.revision + 1,
     };
 
@@ -108,7 +109,7 @@ export async function POST(
           `UPDATE lesson_cards SET
             due_at = ?, stability = ?, difficulty = ?, elapsed_days = ?,
             scheduled_days = ?, learning_steps = ?, reps = ?, lapses = ?,
-            state = ?, last_review = ?, last_rating = ?, revision = revision + 1,
+            state = ?, mastery_level = ?, last_review = ?, last_rating = ?, revision = revision + 1,
             updated_at = ?
           WHERE user_id = ? AND lesson_id = ? AND revision = ?`,
         ).bind(
@@ -121,6 +122,7 @@ export async function POST(
           selected.card.reps,
           selected.card.lapses,
           selected.card.state,
+          selected.masteryLevel,
           selected.card.lastReview,
           body.rating,
           reviewedAt,

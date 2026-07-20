@@ -1,6 +1,6 @@
 import { getLesson } from "@/content/lessons";
 import { ensureSchema, getCard, getD1, storedCardFromRow, upsertUser } from "@/lib/db";
-import { calculateOptions, publicOptions } from "@/lib/fsrs";
+import { calculateOptions, normalizeMasteryLevel, publicOptions } from "@/lib/fsrs";
 import { apiError, authenticateRequest, HttpError } from "@/lib/request-auth";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,8 @@ export async function POST(
     if (!card) throw new HttpError(404, "Карточка урока не найдена");
 
     const calculatedAt = new Date();
-    const options = calculateOptions(storedCardFromRow(card), calculatedAt);
+    const masteryLevel = normalizeMasteryLevel(card.mastery_level);
+    const options = calculateOptions(storedCardFromRow(card), masteryLevel, calculatedAt);
     const attemptId = crypto.randomUUID();
     const expiresAt = new Date(calculatedAt.getTime() + 15 * 60_000).toISOString();
 
@@ -45,7 +46,8 @@ export async function POST(
     return Response.json({
       attemptId,
       calculatedAt: calculatedAt.toISOString(),
-      options: publicOptions(options, calculatedAt),
+      masteryLevel,
+      options: publicOptions(options),
     });
   } catch (error) {
     return apiError(error);

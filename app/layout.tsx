@@ -9,7 +9,7 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: "Арабский на слух",
-  description: "Короткие арабские аудиодиалоги с интервальным повторением FSRS.",
+  description: "Короткие арабские аудиодиалоги с понятным интервальным повторением.",
   other: {
     "codex-preview": "development",
   },

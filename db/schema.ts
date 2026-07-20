@@ -32,6 +32,7 @@ export const lessonCards = sqliteTable("lesson_cards", {
   reps: integer("reps").notNull().default(0),
   lapses: integer("lapses").notNull().default(0),
   state: integer("state").notNull().default(0),
+  masteryLevel: integer("mastery_level").notNull().default(1),
   lastReview: text("last_review"),
   lastRating: text("last_rating"),
   revision: integer("revision").notNull().default(0),

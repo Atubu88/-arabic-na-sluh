@@ -319,7 +319,6 @@ function HomeView({ data, openLesson }: { data: DashboardData; openLesson(id: st
             <p className="eyebrow">Ритм обучения</p>
             <h2>На сегодня</h2>
           </div>
-          <span className="quiet-chip">FSRS</span>
         </div>
         <div className="stat-grid two">
           <article className="stat-card warm">
@@ -440,7 +439,7 @@ function ProgressView({ data }: { data: DashboardData }) {
         <div>
           <p className="eyebrow">Ближайшее повторение</p>
           <h2>{data.progress.nextDueAt ? formatDate(data.progress.nextDueAt) : "После первого урока"}</h2>
-          <p>Дата рассчитывается алгоритмом FSRS по вашей оценке всего диалога.</p>
+          <p>Дата зависит от уровня карточки и вашей оценки всего диалога.</p>
         </div>
       </section>
       <section className="calm-card">
@@ -474,7 +473,7 @@ function AboutView({ data, onSaved }: { data: DashboardData; onSaved(): Promise<
   };
 
   const ratings = [
-    ["Не помню", "Диалог почти не узнался — вернёмся к нему скоро.", "again"],
+    ["Не понял", "Диалог не удалось понять — вернёмся к нему раньше.", "again"],
     ["Трудно", "Поняли с усилием — интервал будет осторожным.", "hard"],
     ["Нормально", "Основной смысл понятен — обычный шаг вперёд.", "good"],
     ["Легко", "Поняли уверенно — можно сделать интервал длиннее.", "easy"],
@@ -491,7 +490,7 @@ function AboutView({ data, onSaved }: { data: DashboardData; onSaved(): Promise<
         <div className="method-line" />
         <div className="method-step"><span>2</span><div><strong>Оцените весь диалог</strong><p>Не отдельное слово, а общее понимание на слух.</p></div></div>
         <div className="method-line" />
-        <div className="method-step"><span>3</span><div><strong>Вернитесь вовремя</strong><p>FSRS подберёт следующий момент автоматически.</p></div></div>
+        <div className="method-step"><span>3</span><div><strong>Вернитесь вовремя</strong><p>Следующий срок зависит от уровня карточки и вашей оценки.</p></div></div>
       </section>
 
       <section className="section-block">
@@ -530,7 +529,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
   const [translation, setTranslation] = useState(false);
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [listened, setListened] = useState(false);
-  const [preview, setPreview] = useState<{ attemptId: string; options: RatingOption[] } | null>(null);
+  const [preview, setPreview] = useState<{ attemptId: string; masteryLevel: number; options: RatingOption[] } | null>(null);
   const [previewError, setPreviewError] = useState("");
   const [submitting, setSubmitting] = useState<RatingKey | null>(null);
   const [result, setResult] = useState<{ dueAt: string; rating: RatingKey } | null>(null);
@@ -563,7 +562,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
 
   useEffect(() => {
     if (!listened || preview || previewError || result) return;
-    api<{ attemptId: string; options: RatingOption[] }>(`/api/lessons/${lesson.id}/preview`, { method: "POST" })
+    api<{ attemptId: string; masteryLevel: number; options: RatingOption[] }>(`/api/lessons/${lesson.id}/preview`, { method: "POST" })
       .then(setPreview)
       .catch((error) => setPreviewError(error instanceof Error ? error.message : "Не удалось рассчитать интервалы"));
   }, [lesson.id, listened, preview, previewError, result]);
@@ -744,22 +743,27 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
         {listened && !result && (
           <section className="review-panel">
             <div className="review-heading"><span><Check size={17} /></span><div><p className="eyebrow">Диалог прослушан</p><h2>Насколько хорошо вы поняли весь диалог на слух?</h2></div></div>
-            {!preview && !previewError && <div className="calculating"><LoaderCircle className="spin" size={18} /> Рассчитываем интервалы FSRS…</div>}
+            {!preview && !previewError && <div className="calculating"><LoaderCircle className="spin" size={18} /> Готовим интервалы повторения…</div>}
             {previewError && <div className="inline-error">{previewError}<button onClick={() => { setPreviewError(""); setPreview(null); }}>Повторить</button></div>}
             {preview && (
-              <div className="rating-grid">
-                {preview.options.map((option) => (
-                  <button
-                    key={option.key}
-                    className={`rating-button ${option.key}`}
-                    disabled={Boolean(submitting)}
-                    onClick={() => void submitRating(option.key)}
-                  >
-                    <span>{submitting === option.key ? <LoaderCircle className="spin" size={17} /> : option.label}</span>
-                    <strong>{option.intervalLabel}</strong>
-                  </button>
-                ))}
-              </div>
+              <>
+                <p className="card-level-label">
+                  {preview.masteryLevel === 1 ? "Новая карточка" : `Уровень карточки: ${preview.masteryLevel}`}
+                </p>
+                <div className="rating-grid">
+                  {preview.options.map((option) => (
+                    <button
+                      key={option.key}
+                      className={`rating-button ${option.key}`}
+                      disabled={Boolean(submitting)}
+                      onClick={() => void submitRating(option.key)}
+                    >
+                      <span>{submitting === option.key ? <LoaderCircle className="spin" size={17} /> : option.label}</span>
+                      <strong>{option.intervalLabel}</strong>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         )}

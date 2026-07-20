@@ -68,6 +68,7 @@ export async function GET(request: Request) {
       cards: cards.map((card) => ({
         lessonId: card.lesson_id,
         state: card.state,
+        masteryLevel: card.mastery_level,
         dueAt: card.due_at,
         lastRating: card.last_rating as RatingKey | null,
         reps: card.reps,
