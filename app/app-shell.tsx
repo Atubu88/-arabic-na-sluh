@@ -455,29 +455,40 @@ function ProgressView({ data }: { data: DashboardData }) {
 
 function AboutView() {
   const ratings = [
-    ["Не понял", "Диалог не удалось понять — вернёмся к нему раньше.", "again"],
-    ["Трудно", "Поняли с усилием — интервал будет осторожным.", "hard"],
-    ["Нормально", "Основной смысл понятен — обычный шаг вперёд.", "good"],
-    ["Легко", "Поняли уверенно — можно сделать интервал длиннее.", "easy"],
+    ["Не помню", "Материал ещё не закрепился — система вернёт его раньше.", "again"],
+    ["Трудно", "Поняли с усилием — повторение будет осторожным.", "hard"],
+    ["Нормально", "Основной смысл уловлен — можно двигаться дальше обычным шагом.", "good"],
+    ["Легко", "Речь узнаётся уверенно — следующий интервал станет длиннее.", "easy"],
   ];
 
   return (
     <>
       <PageHeader
-        eyebrow="Как это работает"
-        title="О методике"
-        text="Один короткий диалог — одна единица памяти. Слушаем целиком и оцениваем понимание на слух."
+        eyebrow="Арабский на слух"
+        title="Не просто учите арабский — начинайте слышать и понимать его"
+        text="С первого урока вы работаете с живой речью: слушаете короткий диалог, следите за арабским текстом и запоминаете целые фразы, а не отдельные слова."
       />
+
+      <section className="notice-card">
+        <div className="notice-icon"><BookMarked size={20} /></div>
+        <div>
+          <strong>Короткий разбор — только по делу</strong>
+          <p>Что-то осталось непонятным? Откройте разбор под уроком — только самое необходимое, без долгих объяснений.</p>
+        </div>
+      </section>
+
       <section className="method-card">
-        <div className="method-step"><span>1</span><div><strong>Слушайте</strong><p>Следите за подсвеченной арабской репликой и вслушивайтесь в общий смысл.</p></div></div>
+        <div className="method-step"><span>1</span><div><strong>Слушайте</strong><p>Короткий урок с понятным текстом и озвучкой.</p></div></div>
         <div className="method-line" />
-        <div className="method-step"><span>2</span><div><strong>Оцените весь диалог</strong><p>Не отдельное слово, а общее понимание на слух — насколько цельно вы уловили разговор.</p></div></div>
+        <div className="method-step"><span>2</span><div><strong>Следите за текстом</strong><p>Во время озвучки держитесь за арабский текст и привыкайте узнавать фразы на слух.</p></div></div>
         <div className="method-line" />
-        <div className="method-step"><span>3</span><div><strong>Вернитесь вовремя</strong><p>Следующий срок зависит от уровня карточки и вашей оценки, чтобы повторения не были ни слишком частыми, ни запоздалыми.</p></div></div>
+        <div className="method-step"><span>3</span><div><strong>Оцените усвоение</strong><p>После урока выберите: «Не помню», «Трудно», «Нормально» или «Легко».</p></div></div>
+        <div className="method-line" />
+        <div className="method-step"><span>4</span><div><strong>Повторяйте вовремя</strong><p>Система сама вернёт сложный материал раньше, а знакомый позже.</p></div></div>
       </section>
 
       <section className="section-block">
-        <div className="section-heading"><div><p className="eyebrow">Четыре оценки</p><h2>Отвечайте честно</h2></div></div>
+        <div className="section-heading"><div><p className="eyebrow">Как проходит обучение</p><h2>Четыре оценки</h2></div></div>
         <div className="rating-explainer">
           {ratings.map(([label, description, key]) => (
             <div key={key} className={`rating-note ${key}`}><span>{label}</span><p>{description}</p></div>
@@ -486,9 +497,17 @@ function AboutView() {
       </section>
 
       <section className="calm-card">
-        <span className="arabic-mini" dir="rtl">قَلِيلٌ دَائِمٌ</span>
-        <h2>Методика держится на ритме, а не на спешке</h2>
-        <p>Задача не в том, чтобы пройти больше уроков за один раз, а в том, чтобы регулярно возвращаться к коротким диалогам и постепенно слышать арабскую речь всё увереннее.</p>
+        <span className="arabic-mini" dir="rtl">سَمِعْتَ ← رَأَيْتَ ← فَهِمْتَ ← كَرَّرْتَ</span>
+        <h2>Почему это работает</h2>
+        <p>Вы не зубрите списки слов и не тратите время на длинную теорию. Арабские фразы возвращаются в нужный момент, пока не начинают узнаваться на слух автоматически.</p>
+      </section>
+
+      <section className="notice-card">
+        <div className="notice-icon"><Headphones size={20} /></div>
+        <div>
+          <strong>Услышал → увидел → понял → повторил → начал узнавать речь</strong>
+          <p>Короткие уроки. Несколько минут в день. Арабский, который остаётся в памяти.</p>
+        </div>
       </section>
     </>
   );
