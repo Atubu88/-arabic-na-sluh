@@ -35,7 +35,7 @@ import type {
   RatingOption,
 } from "@/lib/types";
 
-type Tab = "home" | "path" | "progress" | "about";
+type Tab = "home" | "path" | "progress" | "about" | "settings";
 
 declare global {
   interface Window {
@@ -143,7 +143,8 @@ const navigation: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "home", label: "Главная", icon: Home },
   { id: "path", label: "Путь", icon: Route },
   { id: "progress", label: "Прогресс", icon: TrendingUp },
-  { id: "about", label: "О пути", icon: Info },
+  { id: "about", label: "О методике", icon: Info },
+  { id: "settings", label: "Настройки", icon: Settings2 },
 ];
 
 export default function AppShell() {
@@ -249,7 +250,8 @@ export default function AppShell() {
           {tab === "home" && <HomeView data={data} openLesson={openLesson} />}
           {tab === "path" && <PathView data={data} openLesson={openLesson} />}
           {tab === "progress" && <ProgressView data={data} />}
-          {tab === "about" && <AboutView data={data} onSaved={load} />}
+          {tab === "about" && <AboutView />}
+          {tab === "settings" && <SettingsView data={data} onSaved={load} />}
         </div>
         <nav className="bottom-nav" aria-label="Основная навигация">
           {navigation.map((item) => {
@@ -338,7 +340,7 @@ function HomeView({ data, openLesson }: { data: DashboardData; openLesson(id: st
         <div className="notice-icon"><Bell size={20} /></div>
         <div>
           <strong>{data.settings.enabled ? `Напомним в ${data.settings.timeLocal}` : "Напоминания выключены"}</strong>
-          <p>{data.settings.enabled ? "Только когда наступит повторение" : "Включить можно в разделе «О пути»"}</p>
+          <p>{data.settings.enabled ? "Только когда наступит повторение" : "Включить можно в разделе «Настройки»"}</p>
         </div>
       </section>
     </>
@@ -451,7 +453,48 @@ function ProgressView({ data }: { data: DashboardData }) {
   );
 }
 
-function AboutView({ data, onSaved }: { data: DashboardData; onSaved(): Promise<void> | void }) {
+function AboutView() {
+  const ratings = [
+    ["Не понял", "Диалог не удалось понять — вернёмся к нему раньше.", "again"],
+    ["Трудно", "Поняли с усилием — интервал будет осторожным.", "hard"],
+    ["Нормально", "Основной смысл понятен — обычный шаг вперёд.", "good"],
+    ["Легко", "Поняли уверенно — можно сделать интервал длиннее.", "easy"],
+  ];
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Как это работает"
+        title="О методике"
+        text="Один короткий диалог — одна единица памяти. Слушаем целиком и оцениваем понимание на слух."
+      />
+      <section className="method-card">
+        <div className="method-step"><span>1</span><div><strong>Слушайте</strong><p>Следите за подсвеченной арабской репликой и вслушивайтесь в общий смысл.</p></div></div>
+        <div className="method-line" />
+        <div className="method-step"><span>2</span><div><strong>Оцените весь диалог</strong><p>Не отдельное слово, а общее понимание на слух — насколько цельно вы уловили разговор.</p></div></div>
+        <div className="method-line" />
+        <div className="method-step"><span>3</span><div><strong>Вернитесь вовремя</strong><p>Следующий срок зависит от уровня карточки и вашей оценки, чтобы повторения не были ни слишком частыми, ни запоздалыми.</p></div></div>
+      </section>
+
+      <section className="section-block">
+        <div className="section-heading"><div><p className="eyebrow">Четыре оценки</p><h2>Отвечайте честно</h2></div></div>
+        <div className="rating-explainer">
+          {ratings.map(([label, description, key]) => (
+            <div key={key} className={`rating-note ${key}`}><span>{label}</span><p>{description}</p></div>
+          ))}
+        </div>
+      </section>
+
+      <section className="calm-card">
+        <span className="arabic-mini" dir="rtl">قَلِيلٌ دَائِمٌ</span>
+        <h2>Методика держится на ритме, а не на спешке</h2>
+        <p>Задача не в том, чтобы пройти больше уроков за один раз, а в том, чтобы регулярно возвращаться к коротким диалогам и постепенно слышать арабскую речь всё увереннее.</p>
+      </section>
+    </>
+  );
+}
+
+function SettingsView({ data, onSaved }: { data: DashboardData; onSaved(): Promise<void> | void }) {
   const [enabled, setEnabled] = useState(data.settings.enabled);
   const [time, setTime] = useState(data.settings.timeLocal);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -472,36 +515,13 @@ function AboutView({ data, onSaved }: { data: DashboardData; onSaved(): Promise<
     window.setTimeout(() => setStatus("idle"), 1_500);
   };
 
-  const ratings = [
-    ["Не понял", "Диалог не удалось понять — вернёмся к нему раньше.", "again"],
-    ["Трудно", "Поняли с усилием — интервал будет осторожным.", "hard"],
-    ["Нормально", "Основной смысл понятен — обычный шаг вперёд.", "good"],
-    ["Легко", "Поняли уверенно — можно сделать интервал длиннее.", "easy"],
-  ];
   return (
     <>
       <PageHeader
-        eyebrow="Как это работает"
-        title="О пути"
-        text="Один короткий диалог — одна единица памяти. Слушаем целиком и оцениваем понимание на слух."
+        eyebrow="Личные параметры"
+        title="Настройки"
+        text="Здесь можно управлять напоминаниями без изменения вашего прогресса и методики обучения."
       />
-      <section className="method-card">
-        <div className="method-step"><span>1</span><div><strong>Слушайте</strong><p>Следите за подсвеченной арабской репликой.</p></div></div>
-        <div className="method-line" />
-        <div className="method-step"><span>2</span><div><strong>Оцените весь диалог</strong><p>Не отдельное слово, а общее понимание на слух.</p></div></div>
-        <div className="method-line" />
-        <div className="method-step"><span>3</span><div><strong>Вернитесь вовремя</strong><p>Следующий срок зависит от уровня карточки и вашей оценки.</p></div></div>
-      </section>
-
-      <section className="section-block">
-        <div className="section-heading"><div><p className="eyebrow">Четыре оценки</p><h2>Отвечайте честно</h2></div></div>
-        <div className="rating-explainer">
-          {ratings.map(([label, description, key]) => (
-            <div key={key} className={`rating-note ${key}`}><span>{label}</span><p>{description}</p></div>
-          ))}
-        </div>
-      </section>
-
       <section className="settings-card">
         <div className="settings-title"><Settings2 size={22} /><div><h2>Напоминания</h2><p>Одно сообщение, когда карточка готова.</p></div></div>
         <label className="switch-row">
