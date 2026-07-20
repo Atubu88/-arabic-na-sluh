@@ -31,7 +31,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(40, 91, 73, 
 
 .app-canvas { min-height: 100dvh; background: radial-gradient(circle at 50% -12%, #fffdf8 0, var(--cream) 43%, #eee8dc 100%); }
 .mobile-shell { width: min(100%, 560px); min-height: 100dvh; margin: 0 auto; position: relative; background: var(--cream); box-shadow: 0 0 80px rgba(43, 52, 46, .08); }
-.page-content { padding: 30px 22px calc(116px + var(--safe-bottom)); }
+.page-content { padding: 30px 22px calc(100px + var(--safe-bottom)); }
 .demo-strip { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 32px; padding: 7px 16px; color: #496252; background: #e5eadf; font-size: 12px; font-weight: 650; letter-spacing: .01em; }
 .demo-strip + .page-content { padding-top: 22px; }
 .eyebrow { margin: 0 0 8px; color: var(--green); font-size: 11px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
@@ -139,8 +139,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(40, 91, 73, 
 .secondary-button { width: 100%; margin-top: 18px; padding: 13px; border-radius: 15px; color: var(--green); background: var(--green-soft); }
 .primary-button { padding: 14px 18px; border-radius: 16px; color: white; background: var(--green); }
 
-.bottom-nav { position: fixed; z-index: 20; left: 50%; bottom: 0; width: min(100%, 560px); display: grid; grid-template-columns: repeat(4, 1fr); transform: translateX(-50%); padding: 9px 10px calc(9px + var(--safe-bottom)); border-top: 1px solid rgba(39,71,57,.1); background: rgba(255,252,246,.94); backdrop-filter: blur(18px); }
-.bottom-nav button { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 5px 2px; border: 0; color: #8a8f88; background: transparent; font-size: 9px; font-weight: 650; cursor: pointer; }
+.bottom-nav { position: fixed; z-index: 20; left: 50%; bottom: 0; width: min(100%, 560px); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); transform: translateX(-50%); padding: 7px 6px calc(7px + var(--safe-bottom)); border-top: 1px solid rgba(39,71,57,.1); background: rgba(255,252,246,.94); backdrop-filter: blur(18px); }
+.bottom-nav button { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 1px; border: 0; color: #8a8f88; background: transparent; font-size: 8px; line-height: 1.15; font-weight: 650; cursor: pointer; }
 .bottom-nav button.active { color: var(--green); }
 
 .centered-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; padding: 30px; text-align: center; }
