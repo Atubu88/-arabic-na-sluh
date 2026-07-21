@@ -777,9 +777,9 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
         )}
 
         {listened && !result && (
-          <section className="review-panel review-panel-sticky">
+          <section className={`review-panel review-panel-sticky ${preview ? "review-panel-ready" : ""}`}>
             <div className="review-heading"><span><Check size={17} /></span><div><p className="eyebrow">Диалог прослушан</p><h2>Насколько поняли диалог?</h2></div></div>
-            {!preview && !previewError && <div className="calculating"><LoaderCircle className="spin" size={18} /> Готовим интервалы повторения…</div>}
+            {!preview && !previewError && <div className="calculating calculating-compact"><LoaderCircle className="spin" size={16} /> Готовим варианты…</div>}
             {previewError && <div className="inline-error">{previewError}<button onClick={() => { setPreviewError(""); setPreview(null); }}>Повторить</button></div>}
             {preview && (
               <>
