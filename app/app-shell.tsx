@@ -745,7 +745,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
 
         <div className="lesson-actions">
           <button className="translation-toggle" onClick={() => setTranslation((value) => !value)}>
-            <BookOpen size={18} /> {translation ? "Скрыть перевод" : "Показать перевод"}
+            <BookOpen size={18} /> {translation ? "Скрыть" : "Перевод"}
           </button>
           <button
             className="translation-toggle"
@@ -753,7 +753,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
             aria-expanded={analysisOpen}
             aria-controls={`analysis-${lesson.id}`}
           >
-            <BookMarked size={18} /> {analysisOpen ? "Скрыть разбор" : "Короткий разбор"}
+            <BookMarked size={18} /> {analysisOpen ? "Скрыть" : "Разбор"}
             <ChevronDown className={analysisOpen ? "chevron-open" : ""} size={15} />
           </button>
         </div>
