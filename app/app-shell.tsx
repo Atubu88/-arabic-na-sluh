@@ -684,10 +684,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
           </button>
         </header>
 
-        <section className="lesson-goal">
-          <span>Цель урока</span>
-          <p>{lesson.goal}</p>
-        </section>
+        <p className="lesson-goal-inline"><span>Цель:</span> {lesson.goal}</p>
 
         <section className="dialogue-card" aria-label="Текст диалога">
           {lesson.audioStatus === "placeholder" && (
@@ -781,7 +778,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
 
         {listened && !result && (
           <section className="review-panel">
-            <div className="review-heading"><span><Check size={17} /></span><div><p className="eyebrow">Диалог прослушан</p><h2>Насколько хорошо вы поняли весь диалог на слух?</h2></div></div>
+            <div className="review-heading"><span><Check size={17} /></span><div><p className="eyebrow">Диалог прослушан</p><h2>Насколько поняли диалог?</h2></div></div>
             {!preview && !previewError && <div className="calculating"><LoaderCircle className="spin" size={18} /> Готовим интервалы повторения…</div>}
             {previewError && <div className="inline-error">{previewError}<button onClick={() => { setPreviewError(""); setPreview(null); }}>Повторить</button></div>}
             {preview && (
