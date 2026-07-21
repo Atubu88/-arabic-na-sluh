@@ -743,7 +743,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
           </div>
         </section>
 
-        <div className={`lesson-actions ${listened && !result ? "lesson-actions-above-sticky-review" : ""}`}>
+        <div className="lesson-actions">
           <button className="translation-toggle" onClick={() => setTranslation((value) => !value)}>
             <BookOpen size={18} /> {translation ? "Скрыть" : "Перевод"}
           </button>
