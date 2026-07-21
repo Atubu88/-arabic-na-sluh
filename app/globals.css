@@ -181,7 +181,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(40, 91, 73, 
 .player-controls small { position: absolute; bottom: 0; right: 2px; font-size: 6px; font-weight: 800; }
 .player-controls .main-play { width: 46px; height: 46px; border-radius: 16px; color: white; background: var(--green); box-shadow: 0 6px 14px rgba(40,91,73,.18); }
 .speed-control { min-width: 0; display: flex; justify-content: flex-end; gap: 2px; }
-.speed-control button { padding: 5px 4px; border: 0; border-radius: 8px; color: var(--muted); background: transparent; font-size: 8px; cursor: pointer; }
+.speed-control button { padding: 6px 5px; border: 0; border-radius: 8px; color: var(--muted); background: transparent; font-size: 8px; cursor: pointer; }
 .speed-control button.active { color: var(--green); background: var(--green-soft); font-weight: 800; }
 .translation-toggle { width: calc(100% - 32px); display: flex; justify-content: center; align-items: center; gap: 8px; margin: 10px 16px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 16px; color: var(--green); background: rgba(255,255,255,.45); font-size: 11px; font-weight: 750; cursor: pointer; }
 .lesson-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 10px 16px 0; }
@@ -198,13 +198,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(40, 91, 73, 
 .review-heading { display: flex; align-items: flex-start; gap: 10px; }
 .review-heading > span { width: 31px; height: 31px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 11px; color: white; background: var(--green); }
 .review-heading h2 { margin: 0; font-family: Georgia, serif; font-size: 18px; line-height: 1.18; font-weight: 600; }
-.rating-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 14px; }
-.card-level-label { width: fit-content; margin: 12px 0 -3px; padding: 6px 9px; border-radius: 99px; color: var(--green-dark); background: var(--green-soft); font-size: 10px; font-weight: 800; }
-.rating-button { min-height: 70px; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 10px; border: 1px solid transparent; border-radius: 17px; color: white; cursor: pointer; box-shadow: 0 7px 18px rgba(31,37,34,.1); transition: transform .15s ease, opacity .15s ease; }
+.rating-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+.rating-button { min-height: 56px; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 8px; border: 1px solid transparent; border-radius: 17px; color: white; cursor: pointer; box-shadow: 0 7px 18px rgba(31,37,34,.1); transition: transform .15s ease, opacity .15s ease; }
 .rating-button:active { transform: scale(.98); }
 .rating-button:disabled { opacity: .62; cursor: wait; }
-.rating-button span { display: flex; justify-content: center; font-size: 11px; font-weight: 750; }
-.rating-button strong { color: inherit; font-family: Georgia, serif; font-size: 17px; }
+.rating-button span { display: flex; justify-content: center; font-size: 10px; font-weight: 750; }
+.rating-button strong { color: inherit; font-family: Georgia, serif; font-size: 15px; }
 .rating-button.again { background: #c94f4f; }
 .rating-button.hard { background: #202522; }
 .rating-button.good { background: #337a5f; }

@@ -783,9 +783,6 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
             {previewError && <div className="inline-error">{previewError}<button onClick={() => { setPreviewError(""); setPreview(null); }}>Повторить</button></div>}
             {preview && (
               <>
-                <p className="card-level-label">
-                  {preview.masteryLevel === 1 ? "Новая карточка" : `Уровень карточки: ${preview.masteryLevel}`}
-                </p>
                 <div className="rating-grid">
                   {preview.options.map((option) => (
                     <button
