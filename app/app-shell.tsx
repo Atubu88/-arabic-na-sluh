@@ -675,7 +675,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
 
   return (
     <main className="app-canvas lesson-canvas">
-      <div className="mobile-shell lesson-shell">
+      <div className={`mobile-shell lesson-shell ${listened && !result ? "lesson-shell-with-sticky-review" : ""}`}>
         <header className="lesson-header">
           <button className="icon-button" onClick={onClose} aria-label="Вернуться"><ArrowLeft size={22} /></button>
           <div><span>БЛОК {lesson.block} · УРОК {lesson.number}</span><strong>{lesson.title}</strong></div>
@@ -777,7 +777,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
         )}
 
         {listened && !result && (
-          <section className="review-panel">
+          <section className="review-panel review-panel-sticky">
             <div className="review-heading"><span><Check size={17} /></span><div><p className="eyebrow">Диалог прослушан</p><h2>Насколько поняли диалог?</h2></div></div>
             {!preview && !previewError && <div className="calculating"><LoaderCircle className="spin" size={18} /> Готовим интервалы повторения…</div>}
             {previewError && <div className="inline-error">{previewError}<button onClick={() => { setPreviewError(""); setPreview(null); }}>Повторить</button></div>}
