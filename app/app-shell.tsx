@@ -4,10 +4,7 @@ import {
   ArrowLeft,
   Bell,
   BellOff,
-  BookMarked,
-  BookOpen,
   Check,
-  ChevronDown,
   ChevronRight,
   CircleAlert,
   Gauge,
@@ -566,7 +563,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [translation, setTranslation] = useState(false);
-  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [dialogueTab, setDialogueTab] = useState<"dialogue" | "analysis">("dialogue");
   const [listened, setListened] = useState(false);
   const [preview, setPreview] = useState<{ attemptId: string; masteryLevel: number; options: RatingOption[] } | null>(null);
   const [previewError, setPreviewError] = useState("");
@@ -687,21 +684,52 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
         <p className="lesson-goal-inline"><span>Цель:</span> {lesson.goal}</p>
 
         <section className="dialogue-card" aria-label="Текст диалога">
+          <div className="dialogue-card-tabs" role="tablist" aria-label="Режим карточки">
+            <button
+              className={dialogueTab === "dialogue" ? "active" : ""}
+              onClick={() => setDialogueTab("dialogue")}
+              role="tab"
+              aria-selected={dialogueTab === "dialogue"}
+            >
+              Диалог
+            </button>
+            <button
+              className={dialogueTab === "analysis" ? "active" : ""}
+              onClick={() => setDialogueTab("analysis")}
+              role="tab"
+              aria-selected={dialogueTab === "analysis"}
+            >
+              Разбор
+            </button>
+          </div>
+
           {lesson.audioStatus === "placeholder" && (
             <div className="audio-placeholder"><CircleAlert size={16} /><span><strong>Временная аудиозаглушка.</strong> Подсветка и плеер работают, речевой MP3 будет добавлен позже.</span></div>
           )}
-          <div className="dialogue-lines">
-            {lesson.lines.map((line, index) => {
-              const state = index === activeLine ? "active" : elapsed >= line.endMs ? "past" : "future";
-              return (
-                <article key={line.id} className={`dialogue-line ${state}`}>
-                  <span className="speaker" dir="rtl">{line.speaker}</span>
-                  <p className="arabic-text" dir="rtl" lang="ar">{line.arabic}</p>
-                  {translation && <p className="translation">{line.translation}</p>}
-                </article>
-              );
-            })}
-          </div>
+
+          {dialogueTab === "dialogue" ? (
+            <div className="dialogue-lines">
+              {lesson.lines.map((line, index) => {
+                const state = index === activeLine ? "active" : elapsed >= line.endMs ? "past" : "future";
+                return (
+                  <article key={line.id} className={`dialogue-line ${state}`}>
+                    <span className="speaker" dir="rtl">{line.speaker}</span>
+                    <p className="arabic-text" dir="rtl" lang="ar">{line.arabic}</p>
+                    {translation && <p className="translation">{line.translation}</p>}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="analysis-card-body">
+              {lesson.shortAnalysis.map((item) => (
+                <div className="analysis-item" key={`${lesson.id}-${item.arabic}`}>
+                  <strong dir="rtl" lang="ar">{item.arabic}</strong>
+                  <p>{item.explanation}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {lesson.audioStatus === "ready" && (
@@ -743,34 +771,6 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
           </div>
         </section>
 
-        <div className="lesson-actions">
-          <button className="translation-toggle" onClick={() => setTranslation((value) => !value)}>
-            <BookOpen size={18} /> {translation ? "Скрыть" : "Перевод"}
-          </button>
-          <button
-            className="translation-toggle"
-            onClick={() => setAnalysisOpen((value) => !value)}
-            aria-expanded={analysisOpen}
-            aria-controls={`analysis-${lesson.id}`}
-          >
-            <BookMarked size={18} /> {analysisOpen ? "Скрыть" : "Разбор"}
-            <ChevronDown className={analysisOpen ? "chevron-open" : ""} size={15} />
-          </button>
-        </div>
-
-        {analysisOpen && (
-          <section className="analysis-panel" id={`analysis-${lesson.id}`}>
-            <p className="eyebrow">Короткий разбор</p>
-            <div className="analysis-list">
-              {lesson.shortAnalysis.map((item) => (
-                <div className="analysis-item" key={`${lesson.id}-${item.arabic}`}>
-                  <strong dir="rtl" lang="ar">{item.arabic}</strong>
-                  <p>{item.explanation}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {!listened && (
           <p className="listen-hint"><Headphones size={17} /> Дослушайте диалог, чтобы оценить понимание</p>
