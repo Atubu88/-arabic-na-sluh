@@ -567,7 +567,6 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
   const [speed, setSpeed] = useState(1);
   const [translation, setTranslation] = useState(false);
   const [dialogueTab, setDialogueTab] = useState<"dialogue" | "analysis">("dialogue");
-  const [analysisOpen, setAnalysisOpen] = useState(false);
   const [listened, setListened] = useState(false);
   const [preview, setPreview] = useState<{ attemptId: string; masteryLevel: number; options: RatingOption[] } | null>(null);
   const [previewError, setPreviewError] = useState("");
@@ -774,35 +773,6 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
             </div>
           </div>
         </section>
-
-        <div className="lesson-actions">
-          <button className="translation-toggle" onClick={() => setTranslation((value) => !value)}>
-            <BookOpen size={18} /> {translation ? "Скрыть перевод" : "Показать перевод"}
-          </button>
-          <button
-            className="translation-toggle"
-            onClick={() => setAnalysisOpen((value) => !value)}
-            aria-expanded={analysisOpen}
-            aria-controls={`analysis-${lesson.id}`}
-          >
-            <BookMarked size={18} /> {analysisOpen ? "Скрыть разбор" : "Короткий разбор"}
-            <ChevronDown className={analysisOpen ? "chevron-open" : ""} size={15} />
-          </button>
-        </div>
-
-        {analysisOpen && (
-          <section className="analysis-panel" id={`analysis-${lesson.id}`}>
-            <p className="eyebrow">Короткий разбор</p>
-            <div className="analysis-list">
-              {lesson.shortAnalysis.map((item) => (
-                <div className="analysis-item" key={`${lesson.id}-${item.arabic}`}>
-                  <strong dir="rtl" lang="ar">{item.arabic}</strong>
-                  <p>{item.explanation}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {!listened && (
           <p className="listen-hint"><Headphones size={17} /> Дослушайте диалог, чтобы оценить понимание</p>
