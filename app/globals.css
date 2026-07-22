@@ -152,19 +152,20 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(40, 91, 73, 
 
 .lesson-canvas { background: var(--cream); }
 .lesson-shell { padding-bottom: calc(36px + var(--safe-bottom)); }
-.lesson-header { position: sticky; z-index: 10; top: 0; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: rgba(244,240,231,.94); backdrop-filter: blur(15px); }
-.icon-button, .text-button { border: 0; background: transparent; cursor: pointer; }
-.icon-button { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 13px; background: rgba(255,255,255,.6); }
+.lesson-header { position: sticky; z-index: 10; top: 0; display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: rgba(244,240,231,.94); backdrop-filter: blur(15px); }
+.icon-button { border: 0; background: transparent; cursor: pointer; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 13px; background: rgba(255,255,255,.6); }
 .lesson-header > div { min-width: 0; }
 .lesson-header span { display: block; color: var(--green); font-size: 8px; font-weight: 800; letter-spacing: .13em; }
 .lesson-header strong { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.text-button { padding: 8px; color: var(--green); font-size: 11px; font-weight: 750; }
 .lesson-goal-inline { margin: 10px 16px 0; color: var(--muted); font-size: 11px; line-height: 1.35; }
 .lesson-goal-inline span { color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .dialogue-card { margin: 12px 16px 0; overflow: hidden; border-radius: 24px; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.dialogue-card-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 7px 8px 0; }
+.dialogue-card-topbar { position: relative; padding: 7px 8px 0; }
+.dialogue-card-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding-left: 40px; }
 .dialogue-card-tabs button { border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.55); color: var(--muted); padding: 6px 8px; font-size: 10px; font-weight: 750; cursor: pointer; }
 .dialogue-card-tabs button.active { background: var(--green-soft); color: var(--green-dark); border-color: rgba(40,91,73,.22); }
+.translate-fab { position: absolute; left: 8px; top: 7px; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 999px; display: grid; place-items: center; background: rgba(255,255,255,.72); color: var(--green); font-size: 13px; font-weight: 800; cursor: pointer; }
+.translate-fab.active { background: var(--green-soft); color: var(--green-dark); border-color: rgba(40,91,73,.22); }
 .audio-placeholder { display: flex; gap: 8px; align-items: flex-start; padding: 9px 12px; color: #735d35; background: #f4e9d2; font-size: 10px; line-height: 1.35; }
 .audio-placeholder svg { flex: 0 0 auto; margin-top: 1px; }
 .dialogue-lines { padding: 9px; }

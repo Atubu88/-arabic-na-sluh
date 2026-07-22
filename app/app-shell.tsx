@@ -679,33 +679,43 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
         <header className="lesson-header">
           <button className="icon-button" onClick={onClose} aria-label="Вернуться"><ArrowLeft size={22} /></button>
           <div><span>БЛОК {lesson.block} · УРОК {lesson.number}</span><strong>{lesson.title}</strong></div>
-          <button className="text-button" onClick={() => setTranslation((value) => !value)}>
-            {translation ? "Скрыть" : "Перевод"}
-          </button>
         </header>
 
         <p className="lesson-goal-inline"><span>Цель:</span> {lesson.goal}</p>
 
         <section className="dialogue-card" aria-label="Текст диалога">
-          <div className="dialogue-card-tabs" role="tablist" aria-label="Карточка урока">
-            <button
-              type="button"
-              className={dialogueTab === "dialogue" ? "active" : ""}
-              onClick={() => setDialogueTab("dialogue")}
-              role="tab"
-              aria-selected={dialogueTab === "dialogue"}
-            >
-              Диалог
-            </button>
-            <button
-              type="button"
-              className={dialogueTab === "analysis" ? "active" : ""}
-              onClick={() => setDialogueTab("analysis")}
-              role="tab"
-              aria-selected={dialogueTab === "analysis"}
-            >
-              Разбор
-            </button>
+          <div className="dialogue-card-topbar">
+            <div className="dialogue-card-tabs" role="tablist" aria-label="Карточка урока">
+              <button
+                type="button"
+                className={dialogueTab === "dialogue" ? "active" : ""}
+                onClick={() => setDialogueTab("dialogue")}
+                role="tab"
+                aria-selected={dialogueTab === "dialogue"}
+              >
+                Диалог
+              </button>
+              <button
+                type="button"
+                className={dialogueTab === "analysis" ? "active" : ""}
+                onClick={() => setDialogueTab("analysis")}
+                role="tab"
+                aria-selected={dialogueTab === "analysis"}
+              >
+                Разбор
+              </button>
+            </div>
+            {dialogueTab === "dialogue" && (
+              <button
+                type="button"
+                className={`translate-fab ${translation ? "active" : ""}`}
+                onClick={() => setTranslation((value) => !value)}
+                aria-label={translation ? "Скрыть перевод" : "Показать перевод"}
+                title={translation ? "Скрыть перевод" : "Показать перевод"}
+              >
+                文
+              </button>
+            )}
           </div>
           {lesson.audioStatus === "placeholder" && (
             <div className="audio-placeholder"><CircleAlert size={16} /><span><strong>Временная аудиозаглушка.</strong> Подсветка и плеер работают, речевой MP3 будет добавлен позже.</span></div>
