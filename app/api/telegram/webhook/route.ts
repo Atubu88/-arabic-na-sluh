@@ -1,5 +1,11 @@
 import type { AppEnv } from "@/lib/env";
-import { sendStartMessage } from "@/lib/telegram-bot";
+import {
+  isAdminChat,
+  sendAdminLatestUsers,
+  sendAdminProgress,
+  sendAdminUsersCount,
+  sendStartMessage,
+} from "@/lib/telegram-bot";
 import { getRuntimeEnv } from "@/lib/runtime-env";
 
 export const dynamic = "force-dynamic";
@@ -19,9 +25,37 @@ export async function POST(request: Request) {
   ) {
     return new Response("Unauthorized", { status: 401 });
   }
+
   const update = (await request.json()) as TelegramUpdate;
-  if (update.message?.text?.startsWith("/start")) {
-    await sendStartMessage(runtime, String(update.message.chat.id));
+  const message = update.message;
+  const text = message?.text?.trim();
+  const chatId = message?.chat?.id ? String(message.chat.id) : null;
+
+  if (!text || !chatId) {
+    return Response.json({ ok: true });
   }
+
+  if (text.startsWith("/start")) {
+    await sendStartMessage(runtime, chatId);
+    return Response.json({ ok: true });
+  }
+
+  if (isAdminChat(chatId)) {
+    if (text === "/users_count") {
+      await sendAdminUsersCount(runtime, chatId);
+      return Response.json({ ok: true });
+    }
+
+    if (text === "/last_users") {
+      await sendAdminLatestUsers(runtime, chatId);
+      return Response.json({ ok: true });
+    }
+
+    if (text === "/progress") {
+      await sendAdminProgress(runtime, chatId);
+      return Response.json({ ok: true });
+    }
+  }
+
   return Response.json({ ok: true });
 }
