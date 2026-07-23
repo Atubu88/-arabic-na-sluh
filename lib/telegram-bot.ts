@@ -94,18 +94,20 @@ export async function sendDueReminder(
 export async function sendAdminUsersCount(env: AppEnv, chatId: string) {
   if (!env.DB) throw new Error("D1 binding DB не настроен");
 
-  const [usersCountRow, telegramCountRow, activeLearnersRow, totalReviewsRow] = await Promise.all([
-    env.DB.prepare("SELECT COUNT(*) as count FROM users").first<{ count: number }>(),
+  const [telegramCountRow, activeLearnersRow, totalReviewsRow] = await Promise.all([
     env.DB.prepare("SELECT COUNT(*) as count FROM users WHERE telegram_id IS NOT NULL").first<{ count: number }>(),
-    env.DB.prepare("SELECT COUNT(DISTINCT user_id) as count FROM lesson_cards WHERE state != 0").first<{ count: number }>(),
-    env.DB.prepare("SELECT COUNT(*) as count FROM review_history").first<{ count: number }>(),
+    env.DB.prepare(
+      "SELECT COUNT(DISTINCT lc.user_id) as count FROM lesson_cards lc JOIN users u ON u.user_id = lc.user_id WHERE u.telegram_id IS NOT NULL AND lc.state != 0",
+    ).first<{ count: number }>(),
+    env.DB.prepare(
+      "SELECT COUNT(*) as count FROM review_history rh JOIN users u ON u.user_id = rh.user_id WHERE u.telegram_id IS NOT NULL",
+    ).first<{ count: number }>(),
   ]);
 
   const text = [
-    "📊 Участники",
+    "📊 Реальные участники",
     "",
-    `Всего пользователей: ${usersCountRow?.count ?? 0}`,
-    `Telegram-пользователей: ${telegramCountRow?.count ?? 0}`,
+    `Всего Telegram-пользователей: ${telegramCountRow?.count ?? 0}`,
     `Начали обучение: ${activeLearnersRow?.count ?? 0}`,
     `Всего review: ${totalReviewsRow?.count ?? 0}`,
   ].join("\n");
@@ -119,6 +121,7 @@ export async function sendAdminLatestUsers(env: AppEnv, chatId: string) {
   const result = await env.DB.prepare(
     `SELECT user_id, telegram_id, first_name, last_name, username, created_at, last_seen_at, is_demo
      FROM users
+     WHERE telegram_id IS NOT NULL
      ORDER BY datetime(created_at) DESC
      LIMIT 10`,
   ).all<AdminUserRow>();
