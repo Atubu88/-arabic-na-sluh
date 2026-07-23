@@ -146,15 +146,28 @@ export async function sendAdminProgress(env: AppEnv, chatId: string) {
        u.user_id,
        u.first_name,
        u.username,
-       SUM(CASE WHEN lc.state != 0 THEN 1 ELSE 0 END) as learned_lessons,
-       SUM(CASE WHEN lc.state != 0 AND datetime(lc.due_at) <= datetime('now') THEN 1 ELSE 0 END) as due_now,
-       COALESCE(COUNT(rh.id), 0) as total_reviews,
-       MAX(rh.reviewed_at) as last_reviewed_at
+       COALESCE(cards.learned_lessons, 0) as learned_lessons,
+       COALESCE(cards.due_now, 0) as due_now,
+       COALESCE(reviews.total_reviews, 0) as total_reviews,
+       reviews.last_reviewed_at as last_reviewed_at
      FROM users u
-     LEFT JOIN lesson_cards lc ON lc.user_id = u.user_id
-     LEFT JOIN review_history rh ON rh.user_id = u.user_id
+     LEFT JOIN (
+       SELECT
+         user_id,
+         SUM(CASE WHEN state != 0 THEN 1 ELSE 0 END) as learned_lessons,
+         SUM(CASE WHEN state != 0 AND datetime(due_at) <= datetime('now') THEN 1 ELSE 0 END) as due_now
+       FROM lesson_cards
+       GROUP BY user_id
+     ) cards ON cards.user_id = u.user_id
+     LEFT JOIN (
+       SELECT
+         user_id,
+         COUNT(*) as total_reviews,
+         MAX(reviewed_at) as last_reviewed_at
+       FROM review_history
+       GROUP BY user_id
+     ) reviews ON reviews.user_id = u.user_id
      WHERE u.telegram_id IS NOT NULL
-     GROUP BY u.user_id, u.first_name, u.username
      ORDER BY total_reviews DESC, learned_lessons DESC, datetime(u.created_at) DESC
      LIMIT 10`,
   ).all<AdminProgressRow>();
