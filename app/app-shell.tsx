@@ -35,7 +35,7 @@ import type {
   RatingOption,
 } from "@/lib/types";
 
-type Tab = "home" | "path" | "progress" | "about" | "settings";
+type Tab = "home" | "path" | "progress" | "about";
 
 declare global {
   interface Window {
@@ -90,23 +90,13 @@ function authHeaders() {
     : { "x-demo-id": demoId() };
 }
 
-async function waitForTelegramInitData(timeoutMs = 2200) {
+async function waitForTelegramInitData(timeoutMs = 1500) {
   const startedAt = Date.now();
-  let previous = "";
-  let stableHits = 0;
-
   while (Date.now() - startedAt < timeoutMs) {
-    const initData = window.Telegram?.WebApp?.initData?.trim() ?? "";
-    if (initData && initData === previous) {
-      stableHits += 1;
-      if (stableHits >= 2) return initData;
-    } else {
-      stableHits = initData ? 1 : 0;
-      previous = initData;
-    }
-    await new Promise((resolve) => window.setTimeout(resolve, 80));
+    const initData = window.Telegram?.WebApp?.initData?.trim();
+    if (initData) return initData;
+    await new Promise((resolve) => window.setTimeout(resolve, 50));
   }
-
   return window.Telegram?.WebApp?.initData?.trim() ?? "";
 }
 
@@ -143,8 +133,7 @@ const navigation: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "home", label: "Главная", icon: Home },
   { id: "path", label: "Путь", icon: Route },
   { id: "progress", label: "Прогресс", icon: TrendingUp },
-  { id: "about", label: "О методике", icon: Info },
-  { id: "settings", label: "Настройки", icon: Settings2 },
+  { id: "about", label: "О пути", icon: Info },
 ];
 
 export default function AppShell() {
@@ -155,24 +144,9 @@ export default function AppShell() {
 
   const load = useCallback(async () => {
     setError("");
-    const isTelegram = Boolean(window.Telegram?.WebApp);
-
-    const loadOnce = async () => {
-      await waitForTelegramInitData();
-      return api<DashboardData>("/api/bootstrap");
-    };
-
     try {
-      let dashboard: DashboardData;
-      try {
-        dashboard = await loadOnce();
-      } catch (firstError) {
-        if (!isTelegram) throw firstError;
-        await new Promise((resolve) => window.setTimeout(resolve, 350));
-        await waitForTelegramInitData(2500);
-        dashboard = await loadOnce();
-      }
-
+      await waitForTelegramInitData();
+      const dashboard = await api<DashboardData>("/api/bootstrap");
       setData(dashboard);
       const deepLinkLesson = new URLSearchParams(window.location.search).get("lesson");
       if (deepLinkLesson) setLessonId(deepLinkLesson);
@@ -250,8 +224,7 @@ export default function AppShell() {
           {tab === "home" && <HomeView data={data} openLesson={openLesson} />}
           {tab === "path" && <PathView data={data} openLesson={openLesson} />}
           {tab === "progress" && <ProgressView data={data} />}
-          {tab === "about" && <AboutView />}
-          {tab === "settings" && <SettingsView data={data} onSaved={load} />}
+          {tab === "about" && <AboutView data={data} onSaved={load} />}
         </div>
         <nav className="bottom-nav" aria-label="Основная навигация">
           {navigation.map((item) => {
@@ -321,6 +294,7 @@ function HomeView({ data, openLesson }: { data: DashboardData; openLesson(id: st
             <p className="eyebrow">Ритм обучения</p>
             <h2>На сегодня</h2>
           </div>
+          <span className="quiet-chip">FSRS</span>
         </div>
         <div className="stat-grid two">
           <article className="stat-card warm">
@@ -340,7 +314,7 @@ function HomeView({ data, openLesson }: { data: DashboardData; openLesson(id: st
         <div className="notice-icon"><Bell size={20} /></div>
         <div>
           <strong>{data.settings.enabled ? `Напомним в ${data.settings.timeLocal}` : "Напоминания выключены"}</strong>
-          <p>{data.settings.enabled ? "Только когда наступит повторение" : "Включить можно в разделе «Настройки»"}</p>
+          <p>{data.settings.enabled ? "Только когда наступит повторение" : "Включить можно в разделе «О пути»"}</p>
         </div>
       </section>
     </>
@@ -350,26 +324,7 @@ function HomeView({ data, openLesson }: { data: DashboardData; openLesson(id: st
 function PathView({ data, openLesson }: { data: DashboardData; openLesson(id: string): void }) {
   const learned = data.cards.filter((card) => card.state !== 0).length;
   const percent = data.lessons.length ? Math.round((learned / data.lessons.length) * 100) : 0;
-  const blocks = data.lessons.reduce<Array<{
-    level: number;
-    number: number;
-    title: string;
-    lessons: Lesson[];
-  }>>((groups, lesson) => {
-    let group = groups.find((item) => item.level === lesson.level && item.number === lesson.block);
-    if (!group) {
-      group = { level: lesson.level, number: lesson.block, title: lesson.blockTitle, lessons: [] };
-      groups.push(group);
-    }
-    group.lessons.push(lesson);
-    return groups;
-  }, []);
-
-  const blockDescriptions: Record<number, string> = {
-    1: "Четыре коротких диалога: приветствие, происхождение, город и новые знакомые.",
-    2: "Четыре коротких диалога: языки, понимание речи и общение с новыми людьми.",
-  };
-
+  const firstLesson = data.lessons[0];
   return (
     <>
       <PageHeader
@@ -386,38 +341,34 @@ function PathView({ data, openLesson }: { data: DashboardData; openLesson(id: st
         <div className="progress-track"><span style={{ width: `${percent}%` }} /></div>
         <p>{learned} из {data.lessons.length} уроков начато</p>
       </section>
-      {blocks.map((block) => (
-        <section className="path-block" key={`${block.level}-${block.number}`}>
-          <div className="block-intro">
-            <div className="block-number">{block.number}</div>
-            <div>
-              <p className="eyebrow">Уровень {block.level} · Блок {block.number}</p>
-              <h2>{block.title}</h2>
-              <p>{blockDescriptions[block.number] ?? `${block.lessons.length} коротких аудиодиалога.`}</p>
-            </div>
-          </div>
-          <div className="lesson-list">
-            {block.lessons.map((lesson) => {
-              const card = data.cards.find((item) => item.lessonId === lesson.id);
-              const learnedLesson = Boolean(card && card.state !== 0);
-              const due = learnedLesson && new Date(card!.dueAt) <= new Date();
-              return (
-                <button key={lesson.id} className="lesson-row" onClick={() => openLesson(lesson.id)}>
-                  <span className={`lesson-index ${learnedLesson ? "done" : ""}`}>
-                    {learnedLesson ? <Check size={18} /> : lesson.number}
-                  </span>
-                  <span className="lesson-copy">
-                    <span className="lesson-meta">{due ? "ПОРА ПОВТОРИТЬ" : `${Math.round(lesson.durationMs / 1000)} СЕК · ДИАЛОГ`}</span>
-                    <strong>{lesson.title}</strong>
-                    <span>{learnedLesson ? `Следующий раз: ${formatDate(card!.dueAt)}` : lesson.description}</span>
-                  </span>
-                  <ChevronRight size={19} />
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+      <section className="block-intro">
+        <div className="block-number">{firstLesson?.block ?? 1}</div>
+        <div>
+          <p className="eyebrow">Уровень {firstLesson?.level ?? 1} · Блок {firstLesson?.block ?? 1}</p>
+          <h2>{firstLesson?.blockTitle ?? "Знакомство"}</h2>
+          <p>Четыре коротких диалога: приветствие, происхождение, город и новые знакомые.</p>
+        </div>
+      </section>
+      <section className="lesson-list">
+        {data.lessons.map((lesson) => {
+          const card = data.cards.find((item) => item.lessonId === lesson.id);
+          const learnedLesson = Boolean(card && card.state !== 0);
+          const due = learnedLesson && new Date(card!.dueAt) <= new Date();
+          return (
+            <button key={lesson.id} className="lesson-row" onClick={() => openLesson(lesson.id)}>
+              <span className={`lesson-index ${learnedLesson ? "done" : ""}`}>
+                {learnedLesson ? <Check size={18} /> : lesson.number}
+              </span>
+              <span className="lesson-copy">
+                <span className="lesson-meta">{due ? "ПОРА ПОВТОРИТЬ" : `${Math.round(lesson.durationMs / 1000)} СЕК · ДИАЛОГ`}</span>
+                <strong>{lesson.title}</strong>
+                <span>{learnedLesson ? `Следующий раз: ${formatDate(card!.dueAt)}` : lesson.description}</span>
+              </span>
+              <ChevronRight size={19} />
+            </button>
+          );
+        })}
+      </section>
     </>
   );
 }
@@ -441,7 +392,7 @@ function ProgressView({ data }: { data: DashboardData }) {
         <div>
           <p className="eyebrow">Ближайшее повторение</p>
           <h2>{data.progress.nextDueAt ? formatDate(data.progress.nextDueAt) : "После первого урока"}</h2>
-          <p>Дата зависит от уровня карточки и вашей оценки всего диалога.</p>
+          <p>Дата рассчитывается алгоритмом FSRS по вашей оценке всего диалога.</p>
         </div>
       </section>
       <section className="calm-card">
@@ -453,67 +404,7 @@ function ProgressView({ data }: { data: DashboardData }) {
   );
 }
 
-function AboutView() {
-  const ratings = [
-    ["Не помню", "Материал ещё не закрепился — система вернёт его раньше.", "again"],
-    ["Трудно", "Поняли с усилием — повторение будет осторожным.", "hard"],
-    ["Нормально", "Основной смысл уловлен — можно двигаться дальше обычным шагом.", "good"],
-    ["Легко", "Речь узнаётся уверенно — следующий интервал станет длиннее.", "easy"],
-  ];
-
-  return (
-    <>
-      <PageHeader
-        eyebrow="Арабский на слух"
-        title="Не просто учите арабский — начинайте слышать и понимать его"
-        text="С первого урока вы работаете с живой речью: слушаете короткий диалог, следите за арабским текстом и запоминаете целые фразы, а не отдельные слова."
-      />
-
-      <section className="notice-card">
-        <div className="notice-icon"><BookMarked size={20} /></div>
-        <div>
-          <strong>Короткий разбор — только по делу</strong>
-          <p>Что-то осталось непонятным? Откройте разбор под уроком — только самое необходимое, без долгих объяснений.</p>
-        </div>
-      </section>
-
-      <section className="method-card">
-        <div className="method-step"><span>1</span><div><strong>Слушайте</strong><p>Короткий урок с понятным текстом и озвучкой.</p></div></div>
-        <div className="method-line" />
-        <div className="method-step"><span>2</span><div><strong>Следите за текстом</strong><p>Во время озвучки держитесь за арабский текст и привыкайте узнавать фразы на слух.</p></div></div>
-        <div className="method-line" />
-        <div className="method-step"><span>3</span><div><strong>Оцените усвоение</strong><p>После урока выберите: «Не помню», «Трудно», «Нормально» или «Легко».</p></div></div>
-        <div className="method-line" />
-        <div className="method-step"><span>4</span><div><strong>Повторяйте вовремя</strong><p>Система сама вернёт сложный материал раньше, а знакомый позже.</p></div></div>
-      </section>
-
-      <section className="section-block">
-        <div className="section-heading"><div><p className="eyebrow">Как проходит обучение</p><h2>Четыре оценки</h2></div></div>
-        <div className="rating-explainer">
-          {ratings.map(([label, description, key]) => (
-            <div key={key} className={`rating-note ${key}`}><span>{label}</span><p>{description}</p></div>
-          ))}
-        </div>
-      </section>
-
-      <section className="calm-card">
-        <span className="arabic-mini" dir="rtl">سَمِعْتَ ← رَأَيْتَ ← فَهِمْتَ ← كَرَّرْتَ</span>
-        <h2>Почему это работает</h2>
-        <p>Вы не зубрите списки слов и не тратите время на длинную теорию. Арабские фразы возвращаются в нужный момент, пока не начинают узнаваться на слух автоматически.</p>
-      </section>
-
-      <section className="notice-card">
-        <div className="notice-icon"><Headphones size={20} /></div>
-        <div>
-          <strong>Услышал → увидел → понял → повторил → начал узнавать речь</strong>
-          <p>Короткие уроки. Несколько минут в день. Арабский, который остаётся в памяти.</p>
-        </div>
-      </section>
-    </>
-  );
-}
-
-function SettingsView({ data, onSaved }: { data: DashboardData; onSaved(): Promise<void> | void }) {
+function AboutView({ data, onSaved }: { data: DashboardData; onSaved(): Promise<void> | void }) {
   const [enabled, setEnabled] = useState(data.settings.enabled);
   const [time, setTime] = useState(data.settings.timeLocal);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -534,13 +425,36 @@ function SettingsView({ data, onSaved }: { data: DashboardData; onSaved(): Promi
     window.setTimeout(() => setStatus("idle"), 1_500);
   };
 
+  const ratings = [
+    ["Не помню", "Диалог почти не узнался — вернёмся к нему скоро.", "again"],
+    ["Трудно", "Поняли с усилием — интервал будет осторожным.", "hard"],
+    ["Нормально", "Основной смысл понятен — обычный шаг вперёд.", "good"],
+    ["Легко", "Поняли уверенно — можно сделать интервал длиннее.", "easy"],
+  ];
   return (
     <>
       <PageHeader
-        eyebrow="Личные параметры"
-        title="Настройки"
-        text="Здесь можно управлять напоминаниями без изменения вашего прогресса и методики обучения."
+        eyebrow="Как это работает"
+        title="О пути"
+        text="Один короткий диалог — одна единица памяти. Слушаем целиком и оцениваем понимание на слух."
       />
+      <section className="method-card">
+        <div className="method-step"><span>1</span><div><strong>Слушайте</strong><p>Следите за подсвеченной арабской репликой.</p></div></div>
+        <div className="method-line" />
+        <div className="method-step"><span>2</span><div><strong>Оцените весь диалог</strong><p>Не отдельное слово, а общее понимание на слух.</p></div></div>
+        <div className="method-line" />
+        <div className="method-step"><span>3</span><div><strong>Вернитесь вовремя</strong><p>FSRS подберёт следующий момент автоматически.</p></div></div>
+      </section>
+
+      <section className="section-block">
+        <div className="section-heading"><div><p className="eyebrow">Четыре оценки</p><h2>Отвечайте честно</h2></div></div>
+        <div className="rating-explainer">
+          {ratings.map(([label, description, key]) => (
+            <div key={key} className={`rating-note ${key}`}><span>{label}</span><p>{description}</p></div>
+          ))}
+        </div>
+      </section>
+
       <section className="settings-card">
         <div className="settings-title"><Settings2 size={22} /><div><h2>Напоминания</h2><p>Одно сообщение, когда карточка готова.</p></div></div>
         <label className="switch-row">
@@ -566,9 +480,9 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [translation, setTranslation] = useState(false);
-  const [dialogueTab, setDialogueTab] = useState<"dialogue" | "analysis">("dialogue");
+  const [analysisOpen, setAnalysisOpen] = useState(false);
   const [listened, setListened] = useState(false);
-  const [preview, setPreview] = useState<{ attemptId: string; masteryLevel: number; options: RatingOption[] } | null>(null);
+  const [preview, setPreview] = useState<{ attemptId: string; options: RatingOption[] } | null>(null);
   const [previewError, setPreviewError] = useState("");
   const [submitting, setSubmitting] = useState<RatingKey | null>(null);
   const [result, setResult] = useState<{ dueAt: string; rating: RatingKey } | null>(null);
@@ -601,7 +515,7 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
 
   useEffect(() => {
     if (!listened || preview || previewError || result) return;
-    api<{ attemptId: string; masteryLevel: number; options: RatingOption[] }>(`/api/lessons/${lesson.id}/preview`, { method: "POST" })
+    api<{ attemptId: string; options: RatingOption[] }>(`/api/lessons/${lesson.id}/preview`, { method: "POST" })
       .then(setPreview)
       .catch((error) => setPreviewError(error instanceof Error ? error.message : "Не удалось рассчитать интервалы"));
   }, [lesson.id, listened, preview, previewError, result]);
@@ -675,74 +589,36 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
 
   return (
     <main className="app-canvas lesson-canvas">
-      <div className={`mobile-shell lesson-shell ${listened && !result ? "lesson-shell-with-sticky-review" : ""}`}>
+      <div className="mobile-shell lesson-shell">
         <header className="lesson-header">
           <button className="icon-button" onClick={onClose} aria-label="Вернуться"><ArrowLeft size={22} /></button>
           <div><span>БЛОК {lesson.block} · УРОК {lesson.number}</span><strong>{lesson.title}</strong></div>
+          <button className="text-button" onClick={() => setTranslation((value) => !value)}>
+            {translation ? "Скрыть" : "Перевод"}
+          </button>
         </header>
 
-        <p className="lesson-goal-inline"><span>Цель:</span> {lesson.goal}</p>
+        <section className="lesson-goal">
+          <span>Цель урока</span>
+          <p>{lesson.goal}</p>
+        </section>
 
         <section className="dialogue-card" aria-label="Текст диалога">
-          <div className="dialogue-card-topbar">
-            <div className="dialogue-card-tabs" role="tablist" aria-label="Карточка урока">
-              <button
-                type="button"
-                className={dialogueTab === "dialogue" ? "active" : ""}
-                onClick={() => setDialogueTab("dialogue")}
-                role="tab"
-                aria-selected={dialogueTab === "dialogue"}
-              >
-                Диалог
-              </button>
-              <button
-                type="button"
-                className={dialogueTab === "analysis" ? "active" : ""}
-                onClick={() => setDialogueTab("analysis")}
-                role="tab"
-                aria-selected={dialogueTab === "analysis"}
-              >
-                Разбор
-              </button>
-            </div>
-            {dialogueTab === "dialogue" && (
-              <button
-                type="button"
-                className={`translate-fab ${translation ? "active" : ""}`}
-                onClick={() => setTranslation((value) => !value)}
-                aria-label={translation ? "Скрыть перевод" : "Показать перевод"}
-                title={translation ? "Скрыть перевод" : "Показать перевод"}
-              >
-                文
-              </button>
-            )}
-          </div>
           {lesson.audioStatus === "placeholder" && (
             <div className="audio-placeholder"><CircleAlert size={16} /><span><strong>Временная аудиозаглушка.</strong> Подсветка и плеер работают, речевой MP3 будет добавлен позже.</span></div>
           )}
-          {dialogueTab === "dialogue" ? (
-            <div className="dialogue-lines">
-              {lesson.lines.map((line, index) => {
-                const state = index === activeLine ? "active" : elapsed >= line.endMs ? "past" : "future";
-                return (
-                  <article key={line.id} className={`dialogue-line ${state}`}>
-                    <span className="speaker" dir="rtl">{line.speaker}</span>
-                    <p className="arabic-text" dir="rtl" lang="ar">{line.arabic}</p>
-                    {translation && <p className="translation">{line.translation}</p>}
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="analysis-card-body">
-              {lesson.shortAnalysis.map((item) => (
-                <div className="analysis-item" key={`${lesson.id}-${item.arabic}`}>
-                  <strong dir="rtl" lang="ar">{item.arabic}</strong>
-                  <p>{item.explanation}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="dialogue-lines">
+            {lesson.lines.map((line, index) => {
+              const state = index === activeLine ? "active" : elapsed >= line.endMs ? "past" : "future";
+              return (
+                <article key={line.id} className={`dialogue-line ${state}`}>
+                  <span className="speaker" dir="rtl">{line.speaker}</span>
+                  <p className="arabic-text" dir="rtl" lang="ar">{line.arabic}</p>
+                  {translation && <p className="translation">{line.translation}</p>}
+                </article>
+              );
+            })}
+          </div>
         </section>
 
         {lesson.audioStatus === "ready" && (
@@ -784,34 +660,58 @@ function LessonScreen({ lesson, onClose, onReviewed }: { lesson: Lesson; onClose
           </div>
         </section>
 
+        <div className="lesson-actions">
+          <button className="translation-toggle" onClick={() => setTranslation((value) => !value)}>
+            <BookOpen size={18} /> {translation ? "Скрыть перевод" : "Показать перевод"}
+          </button>
+          <button
+            className="translation-toggle"
+            onClick={() => setAnalysisOpen((value) => !value)}
+            aria-expanded={analysisOpen}
+            aria-controls={`analysis-${lesson.id}`}
+          >
+            <BookMarked size={18} /> {analysisOpen ? "Скрыть разбор" : "Короткий разбор"}
+            <ChevronDown className={analysisOpen ? "chevron-open" : ""} size={15} />
+          </button>
+        </div>
+
+        {analysisOpen && (
+          <section className="analysis-panel" id={`analysis-${lesson.id}`}>
+            <p className="eyebrow">Короткий разбор</p>
+            <div className="analysis-list">
+              {lesson.shortAnalysis.map((item) => (
+                <div className="analysis-item" key={`${lesson.id}-${item.arabic}`}>
+                  <strong dir="rtl" lang="ar">{item.arabic}</strong>
+                  <p>{item.explanation}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {!listened && (
           <p className="listen-hint"><Headphones size={17} /> Дослушайте диалог, чтобы оценить понимание</p>
         )}
 
         {listened && !result && (
-          <section className={`review-panel review-panel-sticky ${preview ? "review-panel-ready" : ""}`}>
-            <div className="review-heading"><span><Check size={17} /></span><div><p className="eyebrow">Диалог прослушан</p><h2>Насколько поняли диалог?</h2></div></div>
-            {!preview && !previewError && <div className="calculating"><LoaderCircle className="spin" size={18} /> Готовим интервалы повторения…</div>}
+          <section className="review-panel">
+            <div className="review-heading"><span><Check size={17} /></span><div><p className="eyebrow">Диалог прослушан</p><h2>Насколько хорошо вы поняли весь диалог на слух?</h2></div></div>
+            {!preview && !previewError && <div className="calculating"><LoaderCircle className="spin" size={18} /> Рассчитываем интервалы FSRS…</div>}
             {previewError && <div className="inline-error">{previewError}<button onClick={() => { setPreviewError(""); setPreview(null); }}>Повторить</button></div>}
             {preview && (
-              <>
-                <p className="card-level-label">
-                  {preview.masteryLevel === 1 ? "Новая карточка" : `Уровень карточки: ${preview.masteryLevel}`}
-                </p>
-                <div className="rating-grid">
-                  {preview.options.map((option) => (
-                    <button
-                      key={option.key}
-                      className={`rating-button ${option.key}`}
-                      disabled={Boolean(submitting)}
-                      onClick={() => void submitRating(option.key)}
-                    >
-                      <span>{submitting === option.key ? <LoaderCircle className="spin" size={17} /> : option.label}</span>
-                      <strong>{option.intervalLabel}</strong>
-                    </button>
-                  ))}
-                </div>
-              </>
+              <div className="rating-grid">
+                {preview.options.map((option) => (
+                  <button
+                    key={option.key}
+                    className={`rating-button ${option.key}`}
+                    disabled={Boolean(submitting)}
+                    onClick={() => void submitRating(option.key)}
+                  >
+                    <span>{submitting === option.key ? <LoaderCircle className="spin" size={17} /> : option.label}</span>
+                    <strong>{option.intervalLabel}</strong>
+                  </button>
+                ))}
+              </div>
             )}
           </section>
         )}
